@@ -1,7 +1,7 @@
-fastapi==0.115.0
-uvicorn[standard]==0.30.6
-huggingface_hub==0.25.1
-ddgs==9.0.0
-trafilatura==1.12.2
-python-dotenv==1.0.1
-pydantic==2.9.2
+fastapi>=0.115
+uvicorn[standard]>=0.30
+huggingface_hub>=0.25
+ddgs>=9.0
+trafilatura>=1.12
+python-dotenv>=1.0
+pydantic>=2.10
