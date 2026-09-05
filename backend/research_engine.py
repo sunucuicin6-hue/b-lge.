@@ -64,27 +64,27 @@ def _extract_json_list(text: str) -> List[Dict]:
 
 
 def plan_aspects(client: InferenceClient, topic: str) -> List[Dict]:
-   system = (
-    "Sen bir derin araştırma planlayıcısısın. Görevin, SANA VERİLEN KONUYA ÖZGÜ "
-    "5-7 alt araştırma başlığı üretmek. Başlıklar tamamen konunun türüne göre değişir; "
-    "aşağıdaki örnekler SADECE farklı konu türlerinde başlıkların ne kadar FARKLI "
-    "olabileceğini göstermek içindir, bunları kopyalama:\n\n"
-    "- Bir suç/fail olayıysa: kurbanlar, deliller, yazılan kitaplar, medyada yer alışı, "
-    "şüpheliler, kronoloji.\n"
-    "- Bir şirketse: kuruluş hikayesi, kurucular, finansman/yatırımlar, ürünler, "
-    "rakipler, tartışmalar/krizler.\n"
-    "- Bir tarihi olaysa: nedenleri, taraflar/aktörler, önemli anlar, sonuçları, "
-    "tarihsel yorumlar/tartışmalar.\n"
-    "- Bir bilim insanı/kişiyse: hayatı, katkıları/keşifleri, tartışmalı yönleri, "
-    "etkisi/mirası, ilişkili kişiler.\n\n"
-    "Bu dört örnek de birbirinden tamamen farklı kategoriler kullanıyor, çünkü her biri "
-    "kendi konusuna özgü. SANA VERİLEN KONU hangi türdense, başlıkları SIFIRDAN o türe "
-    "göre üret — yukarıdaki örneklerin hiçbirini doğrudan kullanma, sadece ilham al. "
-    "Konu bir suç olayı DEĞİLSE 'kurban', 'şüpheli', 'delil' gibi kelimeler KESİNLİKLE "
-    "kullanma.\n\n"
-    "SADECE şu formatta bir JSON listesi döndür, başka hiçbir açıklama ekleme:\n"
-    '[{"title": "Kısa başlık", "query": "internette aratılacak arama sorgusu"}, ...]'
-)
+    system = (
+        "Sen bir derin araştırma planlayıcısısın. Görevin, SANA VERİLEN KONUYA ÖZGÜ "
+        "5-7 alt araştırma başlığı üretmek. Başlıklar tamamen konunun türüne göre değişir; "
+        "aşağıdaki örnekler SADECE farklı konu türlerinde başlıkların ne kadar FARKLI "
+        "olabileceğini göstermek içindir, bunları kopyalama:\n\n"
+        "- Bir suç/fail olayıysa: kurbanlar, deliller, yazılan kitaplar, medyada yer alışı, "
+        "şüpheliler, kronoloji.\n"
+        "- Bir şirketse: kuruluş hikayesi, kurucular, finansman/yatırımlar, ürünler, "
+        "rakipler, tartışmalar/krizler.\n"
+        "- Bir tarihi olaysa: nedenleri, taraflar/aktörler, önemli anlar, sonuçları, "
+        "tarihsel yorumlar/tartışmalar.\n"
+        "- Bir bilim insanı/kişiyse: hayatı, katkıları/keşifleri, tartışmalı yönleri, "
+        "etkisi/mirası, ilişkili kişiler.\n\n"
+        "Bu dört örnek de birbirinden tamamen farklı kategoriler kullanıyor, çünkü her biri "
+        "kendi konusuna özgü. SANA VERİLEN KONU hangi türdense, başlıkları SIFIRDAN o türe "
+        "göre üret — yukarıdaki örneklerin hiçbirini doğrudan kullanma, sadece ilham al. "
+        "Konu bir suç olayı DEĞİLSE 'kurban', 'şüpheli', 'delil' gibi kelimeler KESİNLİKLE "
+        "kullanma.\n\n"
+        "SADECE şu formatta bir JSON listesi döndür, başka hiçbir açıklama ekleme:\n"
+        '[{"title": "Kısa başlık", "query": "internette aratılacak arama sorgusu"}, ...]'
+    )
     user = f"Konu: {topic}\nBu konu için 5-7 alt araştırma başlığı üret."
     raw = _chat(client, system, user, max_tokens=MAX_TOKENS_SMALL_CALL)
     aspects = _extract_json_list(raw)
@@ -129,68 +129,4 @@ def summarize_aspect(client: InferenceClient, topic: str, aspect: Dict, sources:
     system = (
         "Sen bir araştırma asistanısın. Sana bir konu, bir alt-araştırma başlığı ve o başlıkla "
         "ilgili internetten toplanmış kaynak metinleri veriliyor. Görevin SADECE bu kaynaklara "
-        "dayanarak, o alt başlık için 3-6 cümlelik, net ve doğru bir Türkçe özet yazmak. "
-        "Kaynaklarda olmayan bilgiyi UYDURMA. Emin olmadığın yerlerde belirt. "
-        "Sonunda kullandığın kaynakların başlıklarını parantez içinde listele."
-    )
-    user = f"Ana konu: {topic}\nAlt başlık: {aspect['title']}\n\nKaynaklar:\n{context}"
-    summary = _chat(client, system, user, max_tokens=MAX_TOKENS_SMALL_CALL)
-
-    return {
-        "title": aspect["title"],
-        "summary": summary,
-        "sources": [{"title": s["title"], "url": s["url"]} for s in sources if s.get("url")],
-    }
-
-
-def synthesize_report(client: InferenceClient, topic: str, aspect_results: List[Dict]) -> str:
-    combined = "\n\n".join(
-        f"### {a['title']}\n{a['summary']}" for a in aspect_results
-    )
-    system = (
-        "Sen bir baş araştırmacısın. Sana bir konu hakkında farklı alt başlıklardan derlenmiş "
-        "özetler veriliyor. Görevin bunları birleştirip; tekrarları kaldıran, çelişkileri "
-        "belirten, akıcı, iyi organize edilmiş, Türkçe kapsamlı bir SONUÇ RAPORU yazmak. "
-        "Rapor başlıklar halinde olsun, ama alt başlıkları kopyalamak yerine anlatıyı birleştir. "
-        "En sonda 2-3 cümlelik genel bir değerlendirme/özet paragrafı ekle."
-    )
-    user = f"Konu: {topic}\n\nAlt başlık özetleri:\n{combined}"
-    return _chat(client, system, user, max_tokens=MAX_TOKENS_FINAL_CALL)
-
-
-def run_research(topic: str) -> Generator[Dict, None, None]:
-    """
-    Her adımı sırayla üretir (generator) -> FastAPI tarafında streaming için kullanılır.
-    Yield edilen sözlük tipleri: {"type": "plan"|"aspect"|"final"|"error", ...}
-    """
-    client = get_client()
-
-    try:
-        aspects = plan_aspects(client, topic)
-    except Exception as e:
-        yield {"type": "error", "message": f"Planlama hatası: {e}"}
-        return
-
-    yield {"type": "plan", "aspects": [a["title"] for a in aspects]}
-
-    aspect_results = []
-    for aspect in aspects:
-        raw_sources = search_web(aspect.get("query", aspect["title"]))
-        for s in raw_sources:
-            if s.get("url"):
-                s["full_text"] = fetch_page_text(s["url"])
-
-        try:
-            result = summarize_aspect(client, topic, aspect, raw_sources)
-        except Exception as e:
-            result = {"title": aspect["title"], "summary": f"Bu başlık özetlenemedi: {e}", "sources": []}
-
-        aspect_results.append(result)
-        yield {"type": "aspect", **result}
-
-    try:
-        final_report = synthesize_report(client, topic, aspect_results)
-    except Exception as e:
-        final_report = f"Final rapor oluşturulamadı: {e}"
-
-    yield {"type": "final", "report": final_report}
+        "dayanarak, o alt başlık için 3-6
