@@ -36,7 +36,7 @@ def get_client() -> InferenceClient:
         raise RuntimeError(
             "HF_TOKEN ayarlanmamış. .env dosyasına Hugging Face API anahtarınızı ekleyin."
         )
-    return InferenceClient(model=MODEL, token=HF_TOKEN, provider="auto")
+    return InferenceClient(model=MODEL, token=HF_TOKEN, provider=os.environ.get("HF_PROVIDER", "auto"))
 
 
 def _chat(client: InferenceClient, system: str, user: str, max_tokens: int) -> str:
