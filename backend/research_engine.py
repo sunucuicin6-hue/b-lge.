@@ -64,16 +64,27 @@ def _extract_json_list(text: str) -> List[Dict]:
 
 
 def plan_aspects(client: InferenceClient, topic: str) -> List[Dict]:
-    system = (
-        "Sen bir derin araştırma planlayıcısısın. Sana verilen konuyu, o konunun "
-        "türüne göre en önemli 5-7 alt araştırma başlığına bölersin. "
-        "Örneğin bir 'fail/olay araştırması' için: kurbanlar, deliller, konu hakkında "
-        "yazılmış kitaplar, medyada (film/dizi/belgesel) nasıl yer aldığı, şüpheliler/teoriler, "
-        "kronolojik tarihçe gibi başlıklar olabilir. Ama konu farklıysa (şirket, teknoloji, "
-        "tarihi olay vb.) başlıkları o konuya uyacak şekilde kendin uyarlarsın. "
-        "SADECE şu formatta bir JSON listesi döndür, başka hiçbir açıklama ekleme:\n"
-        '[{"title": "Kısa başlık", "query": "internette aratılacak arama sorgusu"}, ...]'
-    )
+   system = (
+    "Sen bir derin araştırma planlayıcısısın. Görevin, SANA VERİLEN KONUYA ÖZGÜ "
+    "5-7 alt araştırma başlığı üretmek. Başlıklar tamamen konunun türüne göre değişir; "
+    "aşağıdaki örnekler SADECE farklı konu türlerinde başlıkların ne kadar FARKLI "
+    "olabileceğini göstermek içindir, bunları kopyalama:\n\n"
+    "- Bir suç/fail olayıysa: kurbanlar, deliller, yazılan kitaplar, medyada yer alışı, "
+    "şüpheliler, kronoloji.\n"
+    "- Bir şirketse: kuruluş hikayesi, kurucular, finansman/yatırımlar, ürünler, "
+    "rakipler, tartışmalar/krizler.\n"
+    "- Bir tarihi olaysa: nedenleri, taraflar/aktörler, önemli anlar, sonuçları, "
+    "tarihsel yorumlar/tartışmalar.\n"
+    "- Bir bilim insanı/kişiyse: hayatı, katkıları/keşifleri, tartışmalı yönleri, "
+    "etkisi/mirası, ilişkili kişiler.\n\n"
+    "Bu dört örnek de birbirinden tamamen farklı kategoriler kullanıyor, çünkü her biri "
+    "kendi konusuna özgü. SANA VERİLEN KONU hangi türdense, başlıkları SIFIRDAN o türe "
+    "göre üret — yukarıdaki örneklerin hiçbirini doğrudan kullanma, sadece ilham al. "
+    "Konu bir suç olayı DEĞİLSE 'kurban', 'şüpheli', 'delil' gibi kelimeler KESİNLİKLE "
+    "kullanma.\n\n"
+    "SADECE şu formatta bir JSON listesi döndür, başka hiçbir açıklama ekleme:\n"
+    '[{"title": "Kısa başlık", "query": "internette aratılacak arama sorgusu"}, ...]'
+)
     user = f"Konu: {topic}\nBu konu için 5-7 alt araştırma başlığı üret."
     raw = _chat(client, system, user, max_tokens=MAX_TOKENS_SMALL_CALL)
     aspects = _extract_json_list(raw)
